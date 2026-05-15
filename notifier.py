@@ -166,12 +166,12 @@ def main():
         new_msgs.append(m)
 
     # 首次运行(seen 为空)时,不发邮件,只把当前所有标记为已通知
-    # if not seen:
-    #     print("[首次运行] 不发邮件,只记录当前消息 ID 作为基线")
-    #     for m in messages:
-    #         seen.add(m["id"])
-    #     save_state(seen)
-    #     return
+    if not seen:
+        print("[首次运行] 不发邮件,只记录当前消息 ID 作为基线")
+        for m in messages:
+            seen.add(m["id"])
+        save_state(seen)
+        return
 
     print(f"匹配 + 未通知过的: {len(new_msgs)} 条")
     if not new_msgs:
