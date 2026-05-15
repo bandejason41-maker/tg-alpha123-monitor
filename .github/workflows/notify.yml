@@ -1,0 +1,52 @@
+name: Telegram Alpha123 Monitor
+
+on:
+  schedule:
+    - cron: '*/2 * * * *'   # 每 2 分钟一次(实际有 1-15 分钟延迟)
+  workflow_dispatch:         # 允许手动触发
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tg-monitor
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore state cache
+        id: cache-state
+        uses: actions/cache@v4
+        with:
+          path: seen_ids.json
+          key: seen-ids-${{ github.run_id }}
+          restore-keys: |
+            seen-ids-
+
+      - name: Run notifier
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_TO:   ${{ secrets.MAIL_TO }}
+        run: python notifier.py
+
+      - name: Save state cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: seen_ids.json
+          key: seen-ids-${{ github.run_id }}
